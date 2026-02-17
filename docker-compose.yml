@@ -1,0 +1,24 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  orderservice:
+    build:
+      context: .
+      dockerfile: OrderService/Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      - rabbitmq
+
+  inventoryservice:
+    build:
+      context: .
+      dockerfile: InventoryService/Dockerfile
+    ports:
+      - "5001:8080"
+    depends_on:
+      - rabbitmq
