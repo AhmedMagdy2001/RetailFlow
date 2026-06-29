@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.Domain.csproj" />
+    <ProjectReference Include="..\InventoryService.Application\InventoryService.Application.csproj" />
+    <ProjectReference Include="..\InventoryService.Infrastructure\InventoryService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
