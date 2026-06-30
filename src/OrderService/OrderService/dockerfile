@@ -1,15 +1,22 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY MicroserviceApp.sln .
-COPY OrderService/ OrderService/
-COPY InventoryService/ InventoryService/
-COPY Shared/ Shared/
+COPY ["MicroserviceApp.sln", "."]
+COPY ["src/OrderService/OrderService/OrderService.csproj", "src/OrderService/OrderService/"]
+COPY ["src/OrderService/OrderService.Application/OrderService.Application.csproj", "src/OrderService/OrderService.Application/"]
+COPY ["src/OrderService/OrderService.Domain/OrderService.Domain.csproj", "src/OrderService/OrderService.Domain/"]
+COPY ["src/OrderService/OrderService.Infrastructure/OrderService.Infrastructure.csproj", "src/OrderService/OrderService.Infrastructure/"]
+COPY ["src/Shared/Shared.Domain/Shared.Domain.csproj", "src/Shared/Shared.Domain/"]
+COPY ["src/Shared/Shared.Infrastructure/Shared.Infrastructure.csproj", "src/Shared/Shared.Infrastructure/"]
 
-RUN dotnet restore OrderService/OrderService.csproj
-RUN dotnet publish OrderService/OrderService.csproj -c Release -o /app/publish
+RUN dotnet restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+COPY . .
+RUN dotnet publish "src/OrderService/OrderService/OrderService.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "OrderService.dll"]
