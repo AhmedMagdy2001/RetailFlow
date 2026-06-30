@@ -364,7 +364,7 @@ This project is open source and available under the MIT License. See the LICENSE
 
 **Ahmed Magdy**
 - GitHub: [@AhmedMagdy2001](https://github.com/AhmedMagdy2001)
-- Email: [Your Email]
+- Email: ahmedmagdy3abdelfattah@gmail.com
 
 ## 📞 Support & Contact
 
