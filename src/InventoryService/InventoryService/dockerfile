@@ -1,15 +1,22 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY MicroserviceApp.sln .
-COPY OrderService/ OrderService/
-COPY InventoryService/ InventoryService/
-COPY Shared/ Shared/
+COPY ["RetailFlow.sln", "."]
+COPY ["src/InventoryService/InventoryService/InventoryService.csproj", "src/InventoryService/InventoryService/"]
+COPY ["src/InventoryService/InventoryService.Application/InventoryService.Application.csproj", "src/InventoryService/InventoryService.Application/"]
+COPY ["src/InventoryService/InventoryService.Domain/InventoryService.Domain.csproj", "src/InventoryService/InventoryService.Domain/"]
+COPY ["src/InventoryService/InventoryService.Infrastructure/InventoryService.Infrastructure.csproj", "src/InventoryService/InventoryService.Infrastructure/"]
+COPY ["src/Shared/Shared.Domain/Shared.Domain.csproj", "src/Shared/Shared.Domain/"]
+COPY ["src/Shared/Shared.Infrastructure/Shared.Infrastructure.csproj", "src/Shared/Shared.Infrastructure/"]
 
-RUN dotnet restore InventoryService/InventoryService.csproj
-RUN dotnet publish InventoryService/InventoryService.csproj -c Release -o /app/publish
+RUN dotnet restore "src/InventoryService/InventoryService/InventoryService.csproj"
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+COPY . .
+RUN dotnet publish "src/InventoryService/InventoryService/InventoryService.csproj" -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/publish .
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
 ENTRYPOINT ["dotnet", "InventoryService.dll"]

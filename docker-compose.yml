@@ -1,24 +1,107 @@
+version: '3.8'
+
 services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql-server
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourPassword123!"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/opt/mssql-tools18/bin/sqlcmd",
+          "-S",
+          "localhost",
+          "-U",
+          "sa",
+          "-P",
+          "YourPassword123!",
+          "-C",
+          "-Q",
+          "SELECT 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - microservices-network
+
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: rabbitmq-server
     ports:
       - "5672:5672"
       - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - microservices-network
 
   orderservice:
     build:
       context: .
-      dockerfile: OrderService/Dockerfile
+      dockerfile: src/OrderService/OrderService/Dockerfile
+    container_name: order-service
     ports:
       - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OrderDB;User Id=sa;Password=YourPassword123!;Encrypt=false;TrustServerCertificate=true;"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
     depends_on:
-      - rabbitmq
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+ 
 
   inventoryservice:
     build:
       context: .
-      dockerfile: InventoryService/Dockerfile
+      dockerfile: src/InventoryService/InventoryService/Dockerfile
+    container_name: inventory-service
     ports:
       - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=InventoryDB;User Id=sa;Password=YourPassword123!;Encrypt=false;TrustServerCertificate=true;"
+      RabbitMQ__HostName: "rabbitmq"
+      RabbitMQ__UserName: "guest"
+      RabbitMQ__Password: "guest"
     depends_on:
-      - rabbitmq
+      sqlserver:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+   
+
+volumes:
+  sqlserver_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+networks:
+  microservices-network:
+    driver: bridge

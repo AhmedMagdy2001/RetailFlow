@@ -41,11 +41,36 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Migrate database
-using (var scope = app.Services.CreateScope())
+// Migrate database with retry logic
+var retryCount = 0;
+const int maxRetries = 5;
+while (retryCount < maxRetries)
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-    dbContext.Database.Migrate();
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+
+            //  handles both physical creation 
+            // and schema layout history correctly.
+            dbContext.Database.Migrate();
+
+            Log.Information("OrderDB migrations applied successfully");
+        }
+        break;
+    }
+    catch (Exception ex)
+    {
+        retryCount++;
+        if (retryCount >= maxRetries)
+        {
+            Log.Fatal(ex, "Failed to migrate OrderDB after {RetryCount} attempts", maxRetries);
+            throw;
+        }
+        Log.Warning("Migration attempt {RetryCount} failed, retrying in 5 seconds...", retryCount);
+        System.Threading.Thread.Sleep(5000);
+    }
 }
 
 if (app.Environment.IsDevelopment())

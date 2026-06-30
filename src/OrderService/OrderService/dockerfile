@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY ["MicroserviceApp.sln", "."]
+COPY ["RetailFlow.sln", "."]
 COPY ["src/OrderService/OrderService/OrderService.csproj", "src/OrderService/OrderService/"]
 COPY ["src/OrderService/OrderService.Application/OrderService.Application.csproj", "src/OrderService/OrderService.Application/"]
 COPY ["src/OrderService/OrderService.Domain/OrderService.Domain.csproj", "src/OrderService/OrderService.Domain/"]
@@ -9,7 +9,7 @@ COPY ["src/OrderService/OrderService.Infrastructure/OrderService.Infrastructure.
 COPY ["src/Shared/Shared.Domain/Shared.Domain.csproj", "src/Shared/Shared.Domain/"]
 COPY ["src/Shared/Shared.Infrastructure/Shared.Infrastructure.csproj", "src/Shared/Shared.Infrastructure/"]
 
-RUN dotnet restore
+RUN dotnet restore "src/OrderService/OrderService/OrderService.csproj"
 
 COPY . .
 RUN dotnet publish "src/OrderService/OrderService/OrderService.csproj" -c Release -o /app/publish
